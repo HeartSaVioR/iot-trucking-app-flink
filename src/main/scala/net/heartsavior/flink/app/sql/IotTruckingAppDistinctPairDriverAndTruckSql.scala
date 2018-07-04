@@ -2,7 +2,7 @@ package net.heartsavior.flink.app.sql
 
 import java.util.Properties
 
-import net.heartsavior.flink.datasource.TruckSpeedSource
+import net.heartsavior.flink.datasource.EventDataSources
 import net.heartsavior.flink.utils.IotTruckingAppConf
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
@@ -23,7 +23,8 @@ object IotTruckingAppDistinctPairDriverAndTruckSql {
 
     val tableEnv = TableEnvironment.getTableEnvironment(env)
 
-    tableEnv.registerTableSource("speed", new TruckSpeedSource(conf.brokers(), conf.speedEventsTopic()))
+    tableEnv.registerTableSource("speed",
+      EventDataSources.speedTableSource(conf.brokers(), conf.speedEventsTopic()))
 
     val outTable = tableEnv.sqlQuery(
       """
@@ -45,7 +46,5 @@ object IotTruckingAppDistinctPairDriverAndTruckSql {
     tableEnv.toRetractStream[Row](outTable).print()
 
     env.execute("IotTruckingAppDistinctPairDriverAndTruckSql")
-
-    // TODO: 'No watermark' is showing in Flink UI - is it a bug? or am I missing something?
   }
 }

@@ -2,7 +2,7 @@ package net.heartsavior.flink.app.sql
 
 import java.util.Properties
 
-import net.heartsavior.flink.datasource.{TruckGeoSource, TruckSpeedSource}
+import net.heartsavior.flink.datasource.EventDataSources
 import net.heartsavior.flink.utils.IotTruckingAppConf
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
@@ -16,7 +16,6 @@ object IotTruckingAppJoinedAbnormalEventsSql {
   def main(args: Array[String]): Unit = {
 
     val conf = new IotTruckingAppConf(args)
-    val brokers = conf.brokers()
 
     val env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI()
     import org.apache.flink.api.common.restartstrategy.RestartStrategies
@@ -26,8 +25,10 @@ object IotTruckingAppJoinedAbnormalEventsSql {
 
     val tableEnv = TableEnvironment.getTableEnvironment(env)
 
-    tableEnv.registerTableSource("geo", new TruckGeoSource(conf.brokers(), conf.geoEventsTopic()))
-    tableEnv.registerTableSource("speed", new TruckSpeedSource(conf.brokers(), conf.speedEventsTopic()))
+    tableEnv.registerTableSource("geo",
+      EventDataSources.geoTableSource(conf.brokers(), conf.geoEventsTopic()))
+    tableEnv.registerTableSource("speed",
+      EventDataSources.speedTableSource(conf.brokers(), conf.speedEventsTopic()))
 
     val outTable = tableEnv.sqlQuery(
       """
@@ -38,7 +39,7 @@ object IotTruckingAppJoinedAbnormalEventsSql {
         |JOIN speed AS s on
         |g.driverId = s.driverId
         |AND g.truckId = s.truckId
-        |AND g.eventTimestamp BETWEEN s.eventTimestamp AND s.eventTimestamp + INTERVAL '1' SECOND
+        |AND g.eventTime BETWEEN s.eventTime AND s.eventTime + INTERVAL '1' SECOND
         |WHERE g.eventType <> 'Normal'
       """.stripMargin)
 
@@ -48,7 +49,5 @@ object IotTruckingAppJoinedAbnormalEventsSql {
     outTable.writeToSink(new Kafka010JsonTableSink(conf.outputTopic(), sinkProps))
 
     env.execute("IotTruckingAppJoinedAbnormalEventsSql")
-
-    // TODO: 'No watermark' is showing in Flink UI - is it a bug? or am I missing something?
   }
 }
