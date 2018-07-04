@@ -2,7 +2,8 @@ package net.heartsavior.flink.app.tableapi
 
 import java.util.Properties
 
-import net.heartsavior.flink.utils.{IotTruckingAppConf, TruckGeoSource, TruckSpeedSource}
+import net.heartsavior.flink.datasource.{TruckGeoSource, TruckSpeedSource}
+import net.heartsavior.flink.utils.IotTruckingAppConf
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.apache.flink.streaming.connectors.kafka.Kafka010JsonTableSink
