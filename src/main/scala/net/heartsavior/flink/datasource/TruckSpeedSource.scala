@@ -27,8 +27,6 @@ class TruckSpeedSource(bootstrapServers: String, topic: String) extends StreamTa
     Types.STRING, Types.STRING, Types.INT, Types.INT,
     Types.STRING, Types.INT, Types.STRING, Types.INT, Types.SQL_TIMESTAMP)
 
-  val returnType = Types.ROW(names, types)
-
   override def getDataStream(execEnv: environment.StreamExecutionEnvironment): datastream.DataStream[Row] = {
     val sourceProp = new Properties()
     sourceProp.setProperty("bootstrap.servers", bootstrapServers)
@@ -49,8 +47,6 @@ class TruckSpeedSource(bootstrapServers: String, topic: String) extends StreamTa
           event.eventTime, event.eventSource, event.truckId, event.driverId,
           event.driverName, event.routeId, event.route, event.speed, event.eventTimestamp)
       })
-      // NOTE: parameter of returns() must be the same object (same identity)
-      // as return value of getReturnType
       .returns(getReturnType)
   }
 
@@ -60,7 +56,7 @@ class TruckSpeedSource(bootstrapServers: String, topic: String) extends StreamTa
   }
 
   override def getReturnType: TypeInformation[Row] = {
-    returnType
+    Types.ROW(names, types)
   }
 
   override def getTableSchema: TableSchema = {

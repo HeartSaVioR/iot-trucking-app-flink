@@ -28,8 +28,6 @@ class TruckGeoSource(bootstrapServers: String, topic: String) extends StreamTabl
     Types.STRING, Types.INT, Types.STRING, Types.STRING,
     Types.DOUBLE, Types.DOUBLE, Types.DOUBLE, Types.SQL_TIMESTAMP)
 
-  val returnType = Types.ROW(names, types)
-
   override def getDataStream(execEnv: environment.StreamExecutionEnvironment): datastream.DataStream[Row] = {
     val sourceProp = new Properties()
     sourceProp.setProperty("bootstrap.servers", bootstrapServers)
@@ -51,8 +49,6 @@ class TruckGeoSource(bootstrapServers: String, topic: String) extends StreamTabl
           event.driverName, event.routeId, event.route, event.eventType,
           event.latitude, event.longitude, event.correlationId, event.eventTimestamp)
       })
-      // NOTE: parameter of returns() must be the same object (same identity)
-      // as return value of getReturnType
       .returns(getReturnType)
   }
 
@@ -62,7 +58,7 @@ class TruckGeoSource(bootstrapServers: String, topic: String) extends StreamTabl
   }
 
   override def getReturnType: TypeInformation[Row] = {
-    returnType
+    Types.ROW(names, types)
   }
 
   override def getTableSchema: TableSchema = {
